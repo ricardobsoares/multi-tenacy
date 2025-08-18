@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Interativo: JWT & Multi-Tenancy</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F8F7F4;
+            color: #3D3D3D;
+        }
+
+        .nav-link {
+            transition: all 0.3s ease;
+            border-bottom: 2px solid transparent;
+        }
+
+        .nav-link.active,
+        .nav-link:hover {
+            color: #4A908A;
+            border-bottom-color: #4A908A;
+        }
+
+        .card {
+            background-color: #FFFFFF;
+            border: 1px solid #EAE8E1;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        .jwt-part {
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .flow-step {
+            transition: all 0.3s ease;
+            border: 2px solid #D4B483;
+        }
+
+        .flow-step.active {
+            background-color: #4A908A;
+            color: white;
+            border-color: #4A908A;
+            transform: scale(1.05);
+        }
+
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-in-out;
+        }
+
+        .code-block {
+            background-color: #2d3748;
+            color: #e2e8f0;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            overflow-x: auto;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.875rem;
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 400px;
+        }
+
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 400px;
+            }
+        }
+    </style>
+</head>
+
+<body class="antialiased">
+
+    <header class="bg-white/80 backdrop-blur-md sticky top-0 z-50 shadow-sm border-b border-gray-200">
+        <nav class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex-shrink-0">
+                    <h1 class="text-xl font-bold text-[#4A908A]">Análise de Arquitetura</h1>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-4">
+                        <a href="#overview" class="nav-link px-3 py-2 rounded-md text-sm font-medium">Visão Geral</a>
+                        <a href="#jwt" class="nav-link px-3 py-2 rounded-md text-sm font-medium">Autenticação JWT</a>
+                        <a href="#multitenancy"
+                            class="nav-link px-3 py-2 rounded-md text-sm font-medium">Multi-Tenancy</a>
+                        <a href="#plan" class="nav-link px-3 py-2 rounded-md text-sm font-medium">Plano de Ação</a>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+
+        <section id="overview" class="scroll-mt-20 mb-16">
+            <h2 class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">Visão Geral da Migração</h2>
+            <p class="mt-4 text-lg text-gray-600">Esta aplicação interativa resume a estratégia para transformar um
+                sistema de inquilino único (single-tenant) em uma plataforma SaaS multi-tenant robusta e escalável,
+                utilizando autenticação JWT segura com React e NestJS.</p>
+
+            <div class="mt-10 grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="card p-6 rounded-lg">
+                    <h3 class="text-lg font-semibold text-[#4A908A]">Autenticação Segura</h3>
+                    <p class="mt-2 text-gray-600">Implementar o padrão <b class="font-semibold">Refresh Token
+                            Rotation</b> para mitigar riscos de XSS e CSRF, garantindo sessões seguras e uma melhor
+                        experiência do usuário.</p>
+                </div>
+                <div class="card p-6 rounded-lg">
+                    <h3 class="text-lg font-semibold text-[#4A908A]">Modelo de Dados</h3>
+                    <p class="mt-2 text-gray-600">Adotar o modelo de <b class="font-semibold">Banco de Dados
+                            Compartilhado</b> com uma coluna discriminadora `tenant_id`, oferecendo o melhor equilíbrio
+                        entre custo e complexidade para a fase inicial.</p>
+                </div>
+                <div class="card p-6 rounded-lg">
+                    <h3 class="text-lg font-semibold text-[#4A908A]">Arquitetura Consciente</h3>
+                    <p class="mt-2 text-gray-600">Tornar cada camada da aplicação, do front-end ao back-end, "consciente
+                        do tenant", assegurando o isolamento de dados em todas as operações.</p>
+                </div>
+            </div>
+        </section>
+
+        <hr class="my-16 border-gray-200">
+
+        <section id="jwt" class="scroll-mt-20 mb-16">
+            <h2 class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">A Jornada da Autenticação JWT</h2>
+            <p class="mt-4 text-lg text-gray-600">A autenticação moderna e stateless é a base de sistemas distribuídos.
+                Vamos desconstruir o JWT e entender o fluxo de autenticação recomendado.</p>
+
+            <div class="mt-10 card p-6 rounded-lg">
+                <h3 class="text-xl font-semibold mb-4">Anatomia de um JSON Web Token</h3>
+                <div id="jwt-visualizer"
+                    class="w-full text-sm break-all p-4 rounded-lg bg-gray-50 border border-gray-200">
+                    <span class="jwt-part text-red-600"
+                        data-content="jwt-header">eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9</span>.<span
+                        class="jwt-part text-purple-600"
+                        data-content="jwt-payload">eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyLCJhdWQiOiJ0ZW5hbnQtYSJ9</span>.<span
+                        class="jwt-part text-blue-600"
+                        data-content="jwt-signature">SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c</span>
+                </div>
+                <div id="jwt-content" class="mt-4 p-4 rounded-lg bg-gray-100 text-gray-700">
+                    Passe o mouse sobre as seções do token para ver os detalhes.
+                </div>
+            </div>
+
+            <div class="mt-10 card p-6 rounded-lg">
+                <h3 class="text-xl font-semibold mb-4">Fluxo de Autenticação: Refresh Token Rotation</h3>
+                <p class="mb-6 text-gray-600">Este padrão oferece a melhor segurança combinada contra ataques XSS e
+                    CSRF. Clique nos passos para ver os detalhes da implementação.</p>
+                <div class="relative">
+                    <div class="absolute left-1/2 top-0 bottom-0 w-0.5 bg-gray-200 hidden sm:block"></div>
+                    <div id="flow-container" class="space-y-8">
+                    </div>
+                </div>
+                <div id="flow-details" class="mt-8 p-4 rounded-lg bg-gray-50 border border-gray-200 min-h-[100px]">
+                </div>
+            </div>
+        </section>
+
+        <hr class="my-16 border-gray-200">
+
+        <section id="multitenancy" class="scroll-mt-20 mb-16">
+            <h2 class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">O Dilema Multi-Tenant</h2>
+            <p class="mt-4 text-lg text-gray-600">A escolha do modelo de dados é a decisão arquitetônica mais
+                impactante. A estratégia correta equilibra isolamento, custo e complexidade.</p>
+
+            <div class="mt-10 card p-6 rounded-lg">
+                <h3 class="text-xl font-semibold mb-4">Comparativo dos Modelos de Banco de Dados</h3>
+                <div class="chart-container">
+                    <canvas id="multiTenantChart"></canvas>
+                </div>
+            </div>
+
+            <div class="mt-10 grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="card p-6 rounded-lg border-2 border-transparent">
+                    <h4 class="font-bold text-lg">DB por Tenant</h4>
+                    <p class="text-sm text-gray-500 mt-1">Isolamento Máximo</p>
+                    <ul class="mt-4 space-y-2 text-sm text-gray-600">
+                        <li><span class="text-green-500 font-bold">✔</span> Segurança e performance isoladas.</li>
+                        <li><span class="text-green-500 font-bold">✔</span> Facilita conformidade (GDPR).</li>
+                        <li><span class="text-red-500 font-bold">✘</span> Custo e complexidade operacional altos.</li>
+                    </ul>
+                </div>
+                <div class="card p-6 rounded-lg border-2 border-transparent">
+                    <h4 class="font-bold text-lg">Schema por Tenant</h4>
+                    <p class="text-sm text-gray-500 mt-1">Equilíbrio Lógico</p>
+                    <ul class="mt-4 space-y-2 text-sm text-gray-600">
+                        <li><span class="text-green-500 font-bold">✔</span> Bom isolamento lógico.</li>
+                        <li><span class="text-green-500 font-bold">✔</span> Custo moderado.</li>
+                        <li><span class="text-red-500 font-bold">✘</span> Migrações ainda complexas.</li>
+                    </ul>
+                </div>
+                <div class="card p-6 rounded-lg border-2 border-[#4A908A] shadow-lg">
+                    <span
+                        class="absolute top-0 right-0 -mt-3 -mr-3 px-3 py-1 bg-[#4A908A] text-white text-xs font-bold rounded-full">Recomendado</span>
+                    <h4 class="font-bold text-lg">DB Compartilhado</h4>
+                    <p class="text-sm text-gray-500 mt-1">Eficiência Máxima</p>
+                    <ul class="mt-4 space-y-2 text-sm text-gray-600">
+                        <li><span class="text-green-500 font-bold">✔</span> Menor custo e complexidade inicial.</li>
+                        <li><span class="text-green-500 font-bold">✔</span> Ideal para validar o modelo de negócio.</li>
+                        <li><span class="text-red-500 font-bold">✘</span> Risco de vazamento de dados se mal
+                            implementado.</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <hr class="my-16 border-gray-200">
+
+        <section id="plan" class="scroll-mt-20">
+            <h2 class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">Plano de Ação Interativo</h2>
+            <p class="mt-4 text-lg text-gray-600">Um guia passo a passo para implementar a arquitetura multi-tenant no
+                sistema existente. Expanda as seções para ver as alterações de código necessárias.</p>
+
+            <div id="accordion-container" class="mt-10 space-y-4">
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-white mt-16 border-t border-gray-200">
+        <div class="container mx-auto py-6 px-4 sm:px-6 lg:px-8 text-center text-gray-500">
+            <p>&copy; 2025 Análise de Arquitetura. Gerado para fins de demonstração.</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            const smoothScroll = (targetId) => {
+                const targetElement = document.querySelector(targetId);
+                if (targetElement) {
+                    window.scrollTo({
+                        top: targetElement.offsetTop - 80,
+                        behavior: 'smooth'
+                    });
+                }
+            };
+
+            document.querySelectorAll('.nav-link').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
+                    this.classList.add('active');
+                    smoothScroll(this.getAttribute('href'));
+                });
+            });
+
+            window.addEventListener('scroll', () => {
+                let current = '';
+                const sections = document.querySelectorAll('section');
+                sections.forEach(section => {
+                    const sectionTop = section.offsetTop;
+                    if (pageYOffset >= sectionTop - 90) {
+                        current = '#' + section.getAttribute('id');
+                    }
+                });
+
+                document.querySelectorAll('.nav-link').forEach(link => {
+                    link.classList.remove('active');
+                    if (link.getAttribute('href') === current) {
+                        link.classList.add('active');
+                    }
+                });
+            });
+
+            const jwtData = {
+                'jwt-header': {
+                    title: 'Header (Cabeçalho)',
+                    content: { alg: "HS256", typ: "JWT" },
+                    description: 'Contém metadados sobre o token, como o algoritmo de assinatura (`alg`) e o tipo (`typ`).'
+                },
+                'jwt-payload': {
+                    title: 'Payload (Carga Útil)',
+                    content: { sub: "1234567890", name: "John Doe", iat: 1516239022, aud: "tenant-a" },
+                    description: 'Contém as "claims" (reivindicações) sobre o usuário e a sessão. A claim `aud` (audience) é usada aqui para identificar o `tenant_id`.'
+                },
+                'jwt-signature': {
+                    title: 'Signature (Assinatura)',
+                    content: 'HMACSHA256(base64UrlEncode(header) + "." + base64UrlEncode(payload), secret)',
+                    description: 'Garante a integridade e autenticidade do token. É gerada a partir do header, payload e uma chave secreta.'
+                }
+            };
+
+            const jwtVisualizer = document.getElementById('jwt-visualizer');
+            const jwtContent = document.getElementById('jwt-content');
+
+            jwtVisualizer.querySelectorAll('.jwt-part').forEach(part => {
+                part.addEventListener('mouseover', () => {
+                    const contentKey = part.dataset.content;
+                    const data = jwtData[contentKey];
+                    let contentHtml = `<pre class="text-sm">${JSON.stringify(data.content, null, 2)}</pre>`;
+                    if (typeof data.content === 'string') {
+                        contentHtml = `<p class="font-mono text-sm">${data.content}</p>`;
+                    }
+                    jwtContent.innerHTML = `
+                        <h4 class="font-bold">${data.title}</h4>
+                        <p class="text-sm mt-1 mb-2">${data.description}</p>
+                        ${contentHtml}
+                    `;
+                });
+            });
+
+            const flowData = [
+                { id: 1, title: 'Login do Usuário', description: 'Usuário envia credenciais. Servidor valida e retorna um Access Token (em memória) e um Refresh Token (em cookie HttpOnly).', code: { react: `// React: Armazena o Access Token na memória\nconst login = (data) => {\n  setAccessToken(data.accessToken);\n  // O Refresh Token é definido pelo servidor em um cookie HttpOnly\n};`, nest: `// NestJS: Envia os tokens\n@Post('login')\nasync login(@Body() loginDto: LoginDto, @Res() res) {\n  const { accessToken, refreshToken } = await this.authService.login(loginDto);\n  res.cookie('refresh_token', refreshToken, { httpOnly: true, secure: true, sameSite: 'strict' });\n  res.json({ accessToken });\n}` } },
+                { id: 2, title: 'Requisição à API', description: 'O cliente envia o Access Token no header `Authorization` para acessar recursos protegidos.', code: { react: `// React (Axios Interceptor):\napi.interceptors.request.use(config => {\n  if (accessToken) {\n    config.headers.Authorization = \`Bearer \${accessToken}\`;\n  }\n  return config;\n});`, nest: `// NestJS (AuthGuard):\n@UseGuards(JwtAuthGuard)\n@Get('profile')\ngetProfile(@Request() req) {\n  return req.user;\n}` } },
+                { id: 3, title: 'Access Token Expira', description: 'A API retorna um erro 401 Unauthorized quando o Access Token expira.', code: { react: `// A API responde com 401`, nest: `// O JwtStrategy do Passport automaticamente rejeita tokens expirados` } },
+                { id: 4, title: 'Atualização Silenciosa', description: 'O interceptor do cliente detecta o 401 e solicita um novo Access Token usando o Refresh Token (enviado via cookie).', code: { react: `// React (Axios Interceptor):\napi.interceptors.response.use(res => res, async error => {\n  if (error.response.status === 401) {\n    const newAccessToken = await refreshAccessToken();\n    // ... re-tenta a requisição original\n  }\n});`, nest: `// NestJS: Endpoint de Refresh\n@Post('refresh')\nasync refresh(@Req() req) {\n  const refreshToken = req.cookies['refresh_token'];\n  return this.authService.refresh(refreshToken);\n}` } },
+                { id: 5, title: 'Rotação de Tokens', description: 'O servidor valida o Refresh Token, gera um NOVO Access Token e um NOVO Refresh Token, invalidando o antigo. Isso aumenta a segurança.', code: { react: `// O cliente recebe o novo Access Token e o novo Refresh Token (via cookie) e atualiza o estado.`, nest: `// NestJS: Lógica de Rotação\nasync refresh(oldRefreshToken) {\n  // 1. Validar o oldRefreshToken\n  // 2. Invalidar o oldRefreshToken no banco de dados\n  // 3. Gerar novo accessToken\n  // 4. Gerar novo refreshToken\n  // 5. Retornar ambos\n}` } }
+            ];
+
+            const flowContainer = document.getElementById('flow-container');
+            const flowDetails = document.getElementById('flow-details');
+            flowContainer.innerHTML = flowData.map((step, index) => `
+                <div class="sm:flex items-center ${index % 2 !== 0 ? 'sm:flex-row-reverse' : ''}">
+                    <div class="sm:w-1/2 p-4">
+                        <div id="step-${step.id}" data-step-id="${step.id}" class="flow-step rounded-lg p-4 text-center cursor-pointer">
+                            <h4 class="font-semibold">Passo ${step.id}: ${step.title}</h4>
+                        </div>
+                    </div>
+                    <div class="sm:w-1/2"></div>
+                </div>
+            `).join('');
+
+            flowDetails.innerHTML = '<p class="text-gray-500">Clique em um passo para ver os detalhes.</p>';
+
+            flowContainer.addEventListener('click', (e) => {
+                const stepElement = e.target.closest('.flow-step');
+                if (!stepElement) return;
+
+                const stepId = stepElement.dataset.stepId;
+                const stepData = flowData.find(s => s.id == stepId);
+
+                document.querySelectorAll('.flow-step').forEach(el => el.classList.remove('active'));
+                stepElement.classList.add('active');
+
+                flowDetails.innerHTML = `
+                    <h4 class="font-bold text-lg mb-2">${stepData.title}</h4>
+                    <p class="text-gray-600 mb-4">${stepData.description}</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <h5 class="font-semibold mb-2 text-sm">Front-end (React)</h5>
+                            <div class="code-block">${stepData.code.react.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</div>
+                        </div>
+                        <div>
+                            <h5 class="font-semibold mb-2 text-sm">Back-end (NestJS)</h5>
+                            <div class="code-block">${stepData.code.nest.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</div>
+                        </div>
+                    </div>
+                `;
+            });
+
+
+            const ctx = document.getElementById('multiTenantChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['DB por Tenant', 'Schema por Tenant', 'DB Compartilhado'],
+                    datasets: [
+                        {
+                            label: 'Custo',
+                            data: [9, 6, 2],
+                            backgroundColor: 'rgba(212, 180, 131, 0.7)',
+                            borderColor: 'rgba(212, 180, 131, 1)',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'Isolamento',
+                            data: [10, 8, 4],
+                            backgroundColor: 'rgba(74, 144, 138, 0.7)',
+                            borderColor: 'rgba(74, 144, 138, 1)',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'Complexidade Operacional',
+                            data: [8, 7, 3],
+                            backgroundColor: 'rgba(220, 53, 69, 0.6)',
+                            borderColor: 'rgba(220, 53, 69, 1)',
+                            borderWidth: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 10,
+                            title: {
+                                display: true,
+                                text: 'Pontuação Relativa (0-10)'
+                            }
+                        }
+                    },
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Análise de Trade-offs dos Modelos Multi-Tenant'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed.y !== null) {
+                                        label += context.parsed.y + ' / 10';
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            const accordionData = [
+                {
+                    title: '1. Alterações no Banco de Dados',
+                    content: `
+                        <p class="mb-4">A fundação da multi-tenancy. Adicionamos uma tabela para gerenciar os tenants e uma coluna \`tenant_id\` em todas as tabelas relevantes.</p>
+                        <h5 class="font-semibold mb-2 text-sm">Criar Tabela de Tenants</h5>
+                        <div class="code-block">CREATE TABLE tenants (
+    id UUID PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);</div>
+                        <h5 class="font-semibold mt-4 mb-2 text-sm">Alterar Tabelas Existentes (Ex: users)</h5>
+                        <div class="code-block">ALTER TABLE users
+ADD COLUMN tenant_id UUID;
+
+ALTER TABLE users
+ADD CONSTRAINT fk_tenant
+FOREIGN KEY (tenant_id) REFERENCES tenants(id);</div>`
+                },
+                {
+                    title: '2. Alterações no Back-end (NestJS)',
+                    content: `
+                        <p class="mb-4">Tornamos o back-end ciente do tenant em cada requisição, atualizamos o JWT e garantimos o isolamento de dados.</p>
+                        <h5 class="font-semibold mb-2 text-sm">Middleware de Identificação do Tenant</h5>
+                        <div class="code-block">const tenantId = req.headers['x-tenant-id'];
+if (!tenantId) throw new UnauthorizedException();
+const tenant = await this.tenantService.findById(tenantId);
+req['tenant'] = tenant;
+next();</div>
+                        <h5 class="font-semibold mt-4 mb-2 text-sm">Atualização do Payload do JWT</h5>
+                        <div class="code-block">// auth.service.ts
+const payload = { sub: user.id, aud: user.tenantId };
+return this.jwtService.sign(payload);</div>
+                        <h5 class="font-semibold mt-4 mb-2 text-sm">Isolamento de Dados nos Serviços</h5>
+                        <div class="code-block">// products.service.ts
+async findAll(tenantId: string): Promise<Product[]> {
+  return this.productsRepository.find({ where: { tenantId } });
+}</div>`
+                },
+                {
+                    title: '3. Alterações no Front-end (React)',
+                    content: `
+                        <p class="mb-4">O front-end passa a gerenciar o tenant ativo e a enviá-lo em cada requisição para a API.</p>
+                        <h5 class="font-semibold mb-2 text-sm">Gerenciamento de Estado do Tenant</h5>
+                        <div class="code-block">// AuthContext.js
+const login = (data) => {
+  const decoded = jwt_decode(data.token);
+  setUser({ id: decoded.sub });
+  setTenantId(decoded.aud); // Armazena o tenantId
+  localStorage.setItem('tenantId', decoded.aud);
+};</div>
+                        <h5 class="font-semibold mt-4 mb-2 text-sm">Injetar Header com Axios Interceptor</h5>
+                        <div class="code-block">// api.js
+api.interceptors.request.use(config => {
+  const tenantId = localStorage.getItem('tenantId');
+  if (tenantId) {
+    config.headers['X-Tenant-ID'] = tenantId;
+  }
+  return config;
+});</div>`
+                }
+            ];
+
+            const accordionContainer = document.getElementById('accordion-container');
+            accordionContainer.innerHTML = accordionData.map((item, index) => `
+                <div class="card rounded-lg overflow-hidden">
+                    <button class="accordion-button w-full text-left p-4 flex justify-between items-center font-semibold bg-gray-50 hover:bg-gray-100 transition-colors">
+                        <span>${item.title}</span>
+                        <span class="transform transition-transform duration-300">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </span>
+                    </button>
+                    <div class="accordion-content">
+                        <div class="p-4 border-t border-gray-200">${item.content}</div>
+                    </div>
+                </div>
+            `).join('');
+
+            accordionContainer.querySelectorAll('.accordion-button').forEach(button => {
+                button.addEventListener('click', () => {
+                    const content = button.nextElementSibling;
+                    const icon = button.querySelector('svg');
+
+                    if (content.style.maxHeight) {
+                        content.style.maxHeight = null;
+                        icon.parentElement.classList.remove('rotate-180');
+                    } else {
+                        content.style.maxHeight = content.scrollHeight + "px";
+                        icon.parentElement.classList.add('rotate-180');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+
+</html>
