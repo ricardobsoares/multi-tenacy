@@ -1,10 +1,9 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Interativo: JWT & Multi-Tenancy</title>
+    <title>Dashboard Interativo: JWT & Multi-Tenancy com API Gateway</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -16,52 +15,42 @@
             background-color: #F8F7F4;
             color: #3D3D3D;
         }
-
         .nav-link {
             transition: all 0.3s ease;
             border-bottom: 2px solid transparent;
         }
-
-        .nav-link.active,
-        .nav-link:hover {
+        .nav-link.active, .nav-link:hover {
             color: #4A908A;
             border-bottom-color: #4A908A;
         }
-
         .card {
             background-color: #FFFFFF;
             border: 1px solid #EAE8E1;
             transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
-
         .card:hover {
             transform: translateY(-5px);
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
         }
-
         .jwt-part {
             cursor: pointer;
             transition: background-color 0.3s;
         }
-
         .flow-step {
             transition: all 0.3s ease;
             border: 2px solid #D4B483;
         }
-
         .flow-step.active {
             background-color: #4A908A;
             color: white;
             border-color: #4A908A;
             transform: scale(1.05);
         }
-
         .accordion-content {
             max-height: 0;
             overflow: hidden;
             transition: max-height 0.5s ease-in-out;
         }
-
         .code-block {
             background-color: #2d3748;
             color: #e2e8f0;
@@ -71,7 +60,6 @@
             font-family: 'Courier New', Courier, monospace;
             font-size: 0.875rem;
         }
-
         .chart-container {
             position: relative;
             width: 100%;
@@ -81,7 +69,6 @@
             height: 350px;
             max-height: 400px;
         }
-
         @media (min-width: 768px) {
             .chart-container {
                 height: 400px;
@@ -89,7 +76,6 @@
         }
     </style>
 </head>
-
 <body class="antialiased">
 
     <header class="bg-white/80 backdrop-blur-md sticky top-0 z-50 shadow-sm border-b border-gray-200">
@@ -102,8 +88,7 @@
                     <div class="ml-10 flex items-baseline space-x-4">
                         <a href="#overview" class="nav-link px-3 py-2 rounded-md text-sm font-medium">Visão Geral</a>
                         <a href="#jwt" class="nav-link px-3 py-2 rounded-md text-sm font-medium">Autenticação JWT</a>
-                        <a href="#multitenancy"
-                            class="nav-link px-3 py-2 rounded-md text-sm font-medium">Multi-Tenancy</a>
+                        <a href="#multitenancy" class="nav-link px-3 py-2 rounded-md text-sm font-medium">Multi-Tenancy</a>
                         <a href="#plan" class="nav-link px-3 py-2 rounded-md text-sm font-medium">Plano de Ação</a>
                     </div>
                 </div>
@@ -114,28 +99,21 @@
     <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
 
         <section id="overview" class="scroll-mt-20 mb-16">
-            <h2 class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">Visão Geral da Migração</h2>
-            <p class="mt-4 text-lg text-gray-600">Esta aplicação interativa resume a estratégia para transformar um
-                sistema de inquilino único (single-tenant) em uma plataforma SaaS multi-tenant robusta e escalável,
-                utilizando autenticação JWT segura com React e NestJS.</p>
-
+            <h2 class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">Visão Geral com API Gateway</h2>
+            <p class="mt-4 text-lg text-gray-600">Esta é a estratégia para evoluir o sistema para uma plataforma SaaS multi-tenant, introduzindo um **API Gateway** como ponto central de controle para autenticação, roteamento e segurança.</p>
+            
             <div class="mt-10 grid grid-cols-1 md:grid-cols-3 gap-8">
                 <div class="card p-6 rounded-lg">
-                    <h3 class="text-lg font-semibold text-[#4A908A]">Autenticação Segura</h3>
-                    <p class="mt-2 text-gray-600">Implementar o padrão <b class="font-semibold">Refresh Token
-                            Rotation</b> para mitigar riscos de XSS e CSRF, garantindo sessões seguras e uma melhor
-                        experiência do usuário.</p>
+                    <h3 class="text-lg font-semibold text-[#4A908A]">API Gateway Centralizado</h3>
+                    <p class="mt-2 text-gray-600">O Gateway atua como a única porta de entrada (<b class="font-semibold">Single Entry Point</b>), validando todos os JWTs, identificando o tenant e roteando as requisições para os microserviços corretos.</p>
                 </div>
                 <div class="card p-6 rounded-lg">
-                    <h3 class="text-lg font-semibold text-[#4A908A]">Modelo de Dados</h3>
-                    <p class="mt-2 text-gray-600">Adotar o modelo de <b class="font-semibold">Banco de Dados
-                            Compartilhado</b> com uma coluna discriminadora `tenant_id`, oferecendo o melhor equilíbrio
-                        entre custo e complexidade para a fase inicial.</p>
+                    <h3 class="text-lg font-semibold text-[#4A908A]">Microserviços Simplificados</h3>
+                    <p class="mt-2 text-gray-600">Os serviços de back-end não precisam mais se preocupar com a lógica de autenticação. Eles confiam no Gateway e recebem o <b class="font-semibold">contexto do tenant</b> via headers.</p>
                 </div>
                 <div class="card p-6 rounded-lg">
-                    <h3 class="text-lg font-semibold text-[#4A908A]">Arquitetura Consciente</h3>
-                    <p class="mt-2 text-gray-600">Tornar cada camada da aplicação, do front-end ao back-end, "consciente
-                        do tenant", assegurando o isolamento de dados em todas as operações.</p>
+                    <h3 class="text-lg font-semibold text-[#4A908A]">Segurança Aprimorada</h3>
+                    <p class="mt-2 text-gray-600">Centralizar a lógica de autenticação no Gateway reduz a superfície de ataque e garante que políticas de segurança sejam aplicadas de forma consistente em todo o sistema.</p>
                 </div>
             </div>
         </section>
@@ -143,36 +121,30 @@
         <hr class="my-16 border-gray-200">
 
         <section id="jwt" class="scroll-mt-20 mb-16">
-            <h2 class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">A Jornada da Autenticação JWT</h2>
-            <p class="mt-4 text-lg text-gray-600">A autenticação moderna e stateless é a base de sistemas distribuídos.
-                Vamos desconstruir o JWT e entender o fluxo de autenticação recomendado.</p>
+            <h2 class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">A Jornada da Autenticação via Gateway</h2>
+            <p class="mt-4 text-lg text-gray-600">O JWT é chave da nossa autenticação com seu ciclo de vida gerenciado e validado pelo API Gateway.</p>
 
             <div class="mt-10 card p-6 rounded-lg">
                 <h3 class="text-xl font-semibold mb-4">Anatomia de um JSON Web Token</h3>
-                <div id="jwt-visualizer"
-                    class="w-full text-sm break-all p-4 rounded-lg bg-gray-50 border border-gray-200">
-                    <span class="jwt-part text-red-600"
-                        data-content="jwt-header">eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9</span>.<span
-                        class="jwt-part text-purple-600"
-                        data-content="jwt-payload">eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyLCJhdWQiOiJ0ZW5hbnQtYSJ9</span>.<span
-                        class="jwt-part text-blue-600"
-                        data-content="jwt-signature">SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c</span>
+                <div id="jwt-visualizer" class="w-full text-sm break-all p-4 rounded-lg bg-gray-50 border border-gray-200">
+                    <span class="jwt-part text-red-600" data-content="jwt-header">eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9</span>.<span class="jwt-part text-purple-600" data-content="jwt-payload">eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyLCJhdWQiOiJ0ZW5hbnQtYSJ9</span>.<span class="jwt-part text-blue-600" data-content="jwt-signature">SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c</span>
                 </div>
                 <div id="jwt-content" class="mt-4 p-4 rounded-lg bg-gray-100 text-gray-700">
-                    Passe o mouse sobre as seções do token para ver os detalhes.
+                    Passe o mouse sobre as seções do token para ver os detalhes. A claim `aud` é crucial para o Gateway identificar o tenant.
                 </div>
             </div>
 
             <div class="mt-10 card p-6 rounded-lg">
-                <h3 class="text-xl font-semibold mb-4">Fluxo de Autenticação: Refresh Token Rotation</h3>
-                <p class="mb-6 text-gray-600">Este padrão oferece a melhor segurança combinada contra ataques XSS e
-                    CSRF. Clique nos passos para ver os detalhes da implementação.</p>
+                <h3 class="text-xl font-semibold mb-4">Fluxo de Autenticação: Orquestrado pelo Gateway</h3>
+                <p class="mb-6 text-gray-600">O padrão de Refresh Token Rotation com todas as interações passando pelo Gateway, que orquestra a comunicação com o serviço de autenticação.</p>
                 <div class="relative">
                     <div class="absolute left-1/2 top-0 bottom-0 w-0.5 bg-gray-200 hidden sm:block"></div>
                     <div id="flow-container" class="space-y-8">
+                        <!-- Steps will be injected by JS -->
                     </div>
                 </div>
                 <div id="flow-details" class="mt-8 p-4 rounded-lg bg-gray-50 border border-gray-200 min-h-[100px]">
+                    <!-- Details will be injected by JS -->
                 </div>
             </div>
         </section>
@@ -181,9 +153,8 @@
 
         <section id="multitenancy" class="scroll-mt-20 mb-16">
             <h2 class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">O Dilema Multi-Tenant</h2>
-            <p class="mt-4 text-lg text-gray-600">A escolha do modelo de dados é a decisão arquitetônica mais
-                impactante. A estratégia correta equilibra isolamento, custo e complexidade.</p>
-
+            <p class="mt-4 text-lg text-gray-600">A escolha do modelo de dados é a decisão arquitetônica mais impactante. A estratégia correta equilibra isolamento, custo e complexidade. O Gateway garante que o `tenant_id` correto seja aplicado antes de qualquer consulta ao banco de dados.</p>
+            
             <div class="mt-10 card p-6 rounded-lg">
                 <h3 class="text-xl font-semibold mb-4">Comparativo dos Modelos de Banco de Dados</h3>
                 <div class="chart-container">
@@ -211,15 +182,13 @@
                     </ul>
                 </div>
                 <div class="card p-6 rounded-lg border-2 border-[#4A908A] shadow-lg">
-                    <span
-                        class="absolute top-0 right-0 -mt-3 -mr-3 px-3 py-1 bg-[#4A908A] text-white text-xs font-bold rounded-full">Recomendado</span>
+                    <span class="absolute top-0 right-0 -mt-3 -mr-3 px-3 py-1 bg-[#4A908A] text-white text-xs font-bold rounded-full">Recomendado</span>
                     <h4 class="font-bold text-lg">DB Compartilhado</h4>
                     <p class="text-sm text-gray-500 mt-1">Eficiência Máxima</p>
                     <ul class="mt-4 space-y-2 text-sm text-gray-600">
                         <li><span class="text-green-500 font-bold">✔</span> Menor custo e complexidade inicial.</li>
                         <li><span class="text-green-500 font-bold">✔</span> Ideal para validar o modelo de negócio.</li>
-                        <li><span class="text-red-500 font-bold">✘</span> Risco de vazamento de dados se mal
-                            implementado.</li>
+                        <li><span class="text-red-500 font-bold">✘</span> Isolamento depende da lógica de aplicação (reforçado pelo Gateway).</li>
                     </ul>
                 </div>
             </div>
@@ -228,10 +197,9 @@
         <hr class="my-16 border-gray-200">
 
         <section id="plan" class="scroll-mt-20">
-            <h2 class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">Plano de Ação Interativo</h2>
-            <p class="mt-4 text-lg text-gray-600">Um guia passo a passo para implementar a arquitetura multi-tenant no
-                sistema existente. Expanda as seções para ver as alterações de código necessárias.</p>
-
+            <h2 class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">Plano de Ação com API Gateway</h2>
+            <p class="mt-4 text-lg text-gray-600">Um guia passo a passo para refatorar a arquitetura. A primeira etapa é a criação do nosso novo ponto de entrada: o Gateway.</p>
+            
             <div id="accordion-container" class="mt-10 space-y-4">
             </div>
         </section>
@@ -251,7 +219,7 @@
                 const targetElement = document.querySelector(targetId);
                 if (targetElement) {
                     window.scrollTo({
-                        top: targetElement.offsetTop - 80,
+                        top: targetElement.offsetTop - 80, 
                         behavior: 'smooth'
                     });
                 }
@@ -293,12 +261,12 @@
                 'jwt-payload': {
                     title: 'Payload (Carga Útil)',
                     content: { sub: "1234567890", name: "John Doe", iat: 1516239022, aud: "tenant-a" },
-                    description: 'Contém as "claims" (reivindicações) sobre o usuário e a sessão. A claim `aud` (audience) é usada aqui para identificar o `tenant_id`.'
+                    description: 'Contém as "claims" (reivindicações). A claim `aud` (audience) é usada pelo Gateway para identificar o `tenant_id` e aplicar o isolamento.'
                 },
                 'jwt-signature': {
                     title: 'Signature (Assinatura)',
                     content: 'HMACSHA256(base64UrlEncode(header) + "." + base64UrlEncode(payload), secret)',
-                    description: 'Garante a integridade e autenticidade do token. É gerada a partir do header, payload e uma chave secreta.'
+                    description: 'Garante a integridade do token. Apenas o Gateway e o Serviço de Auth precisam da chave secreta para validar/gerar a assinatura.'
                 }
             };
 
@@ -322,11 +290,11 @@
             });
 
             const flowData = [
-                { id: 1, title: 'Login do Usuário', description: 'Usuário envia credenciais. Servidor valida e retorna um Access Token (em memória) e um Refresh Token (em cookie HttpOnly).', code: { react: `// React: Armazena o Access Token na memória\nconst login = (data) => {\n  setAccessToken(data.accessToken);\n  // O Refresh Token é definido pelo servidor em um cookie HttpOnly\n};`, nest: `// NestJS: Envia os tokens\n@Post('login')\nasync login(@Body() loginDto: LoginDto, @Res() res) {\n  const { accessToken, refreshToken } = await this.authService.login(loginDto);\n  res.cookie('refresh_token', refreshToken, { httpOnly: true, secure: true, sameSite: 'strict' });\n  res.json({ accessToken });\n}` } },
-                { id: 2, title: 'Requisição à API', description: 'O cliente envia o Access Token no header `Authorization` para acessar recursos protegidos.', code: { react: `// React (Axios Interceptor):\napi.interceptors.request.use(config => {\n  if (accessToken) {\n    config.headers.Authorization = \`Bearer \${accessToken}\`;\n  }\n  return config;\n});`, nest: `// NestJS (AuthGuard):\n@UseGuards(JwtAuthGuard)\n@Get('profile')\ngetProfile(@Request() req) {\n  return req.user;\n}` } },
-                { id: 3, title: 'Access Token Expira', description: 'A API retorna um erro 401 Unauthorized quando o Access Token expira.', code: { react: `// A API responde com 401`, nest: `// O JwtStrategy do Passport automaticamente rejeita tokens expirados` } },
-                { id: 4, title: 'Atualização Silenciosa', description: 'O interceptor do cliente detecta o 401 e solicita um novo Access Token usando o Refresh Token (enviado via cookie).', code: { react: `// React (Axios Interceptor):\napi.interceptors.response.use(res => res, async error => {\n  if (error.response.status === 401) {\n    const newAccessToken = await refreshAccessToken();\n    // ... re-tenta a requisição original\n  }\n});`, nest: `// NestJS: Endpoint de Refresh\n@Post('refresh')\nasync refresh(@Req() req) {\n  const refreshToken = req.cookies['refresh_token'];\n  return this.authService.refresh(refreshToken);\n}` } },
-                { id: 5, title: 'Rotação de Tokens', description: 'O servidor valida o Refresh Token, gera um NOVO Access Token e um NOVO Refresh Token, invalidando o antigo. Isso aumenta a segurança.', code: { react: `// O cliente recebe o novo Access Token e o novo Refresh Token (via cookie) e atualiza o estado.`, nest: `// NestJS: Lógica de Rotação\nasync refresh(oldRefreshToken) {\n  // 1. Validar o oldRefreshToken\n  // 2. Invalidar o oldRefreshToken no banco de dados\n  // 3. Gerar novo accessToken\n  // 4. Gerar novo refreshToken\n  // 5. Retornar ambos\n}` } }
+                { id: 1, title: 'Login do Usuário', description: 'Usuário envia credenciais ao Gateway, que repassa ao Serviço de Auth. A resposta com os tokens segue o caminho inverso.', code: { react: `// React: Envia para o Gateway\nconst login = async (credentials) => {\n  const response = await api.post('/auth/login', credentials);\n  setAccessToken(response.data.accessToken);\n};`, nest: `// Gateway: Roteia para o serviço de Auth\n@Post('/auth/login')\nlogin(@Body() body) {\n  return this.authService.login(body);\n}` } },
+                { id: 2, title: 'Requisição à API', description: 'O cliente envia o Access Token ao Gateway. O Gateway valida o token, extrai o tenant e repassa a requisição ao microserviço apropriado com o tenant_id no header.', code: { react: `// React: A requisição é a mesma, mas agora para o Gateway\napi.get('/products');`, nest: `// Gateway: Auth Guard\n@UseGuards(JwtAuthGuard)\n@All(':service/*')\nasync proxy(@Req() req) {\n  const tenantId = req.user.aud;\n  req.headers['x-tenant-id'] = tenantId;\n  // ...lógica de proxy para o microserviço\n}` } },
+                { id: 3, title: 'Access Token Expira', description: 'O Gateway intercepta a requisição, vê que o token expirou e retorna 401 Unauthorized, sem incomodar os microserviços.', code: { react: `// A resposta 401 vem do Gateway`, nest: `// Gateway: O JwtAuthGuard do Gateway rejeita o token expirado.` } },
+                { id: 4, title: 'Atualização Silenciosa', description: 'O cliente envia o Refresh Token para o endpoint de refresh do Gateway, que orquestra a renovação com o Serviço de Auth.', code: { react: `// React: Pede refresh ao Gateway\nconst newAccessToken = await api.post('/auth/refresh');`, nest: `// Gateway: Roteia para o serviço de Auth\n@Post('/auth/refresh')\nrefresh(@Req() req) {\n  const refreshToken = req.cookies['refresh_token'];\n  return this.authService.refresh({ refreshToken });\n}` } },
+                { id: 5, title: 'Rotação de Tokens', description: 'O Serviço de Auth, chamado pelo Gateway, executa a rotação e retorna os novos tokens. O Gateway os repassa ao cliente.', code: { react: `// O cliente recebe os novos tokens do Gateway.`, nest: `// Serviço de Auth: A lógica de rotação permanece a mesma, mas é invocada pelo Gateway.` } }
             ];
 
             const flowContainer = document.getElementById('flow-container');
@@ -341,7 +309,7 @@
                     <div class="sm:w-1/2"></div>
                 </div>
             `).join('');
-
+            
             flowDetails.innerHTML = '<p class="text-gray-500">Clique em um passo para ver os detalhes.</p>';
 
             flowContainer.addEventListener('click', (e) => {
@@ -363,7 +331,7 @@
                             <div class="code-block">${stepData.code.react.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</div>
                         </div>
                         <div>
-                            <h5 class="font-semibold mb-2 text-sm">Back-end (NestJS)</h5>
+                            <h5 class="font-semibold mb-2 text-sm">Back-end (NestJS - Gateway/Serviço)</h5>
                             <div class="code-block">${stepData.code.nest.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</div>
                         </div>
                     </div>
@@ -420,7 +388,7 @@
                         },
                         tooltip: {
                             callbacks: {
-                                label: function (context) {
+                                label: function(context) {
                                     let label = context.dataset.label || '';
                                     if (label) {
                                         label += ': ';
@@ -438,7 +406,30 @@
 
             const accordionData = [
                 {
-                    title: '1. Alterações no Banco de Dados',
+                    title: '1. Implementar o API Gateway (NestJS)',
+                    content: `
+                        <p class="mb-4">O novo coração da arquitetura. Ele valida tokens e enriquece as requisições com o contexto do tenant antes de repassá-las.</p>
+                        <h5 class="font-semibold mb-2 text-sm">Auth Guard no Gateway</h5>
+                        <div class="code-block">// gateway/src/auth/jwt-auth.guard.ts
+@Injectable()
+export class JwtAuthGuard extends AuthGuard('jwt') {
+  // Este guard valida o token em todas as requisições que chegam
+}</div>
+                        <h5 class="font-semibold mt-4 mb-2 text-sm">Middleware de Tenant no Gateway</h5>
+                        <div class="code-block">// gateway/src/tenant/tenant.middleware.ts
+@Injectable()
+export class TenantMiddleware implements NestMiddleware {
+  use(req: Request, res: Response, next: NextFunction) {
+    const user = req.user as { aud: string };
+    if (user && user.aud) {
+      req.headers['x-tenant-id'] = user.aud; // Injeta o tenant ID
+    }
+    next();
+  }
+}</div>`
+                },
+                {
+                    title: '2. Alterações no Banco de Dados',
                     content: `
                         <p class="mb-4">A fundação da multi-tenancy. Adicionamos uma tabela para gerenciar os tenants e uma coluna \`tenant_id\` em todas as tabelas relevantes.</p>
                         <h5 class="font-semibold mb-2 text-sm">Criar Tabela de Tenants</h5>
@@ -456,46 +447,40 @@ ADD CONSTRAINT fk_tenant
 FOREIGN KEY (tenant_id) REFERENCES tenants(id);</div>`
                 },
                 {
-                    title: '2. Alterações no Back-end (NestJS)',
+                    title: '3. Simplificar os Microserviços',
                     content: `
-                        <p class="mb-4">Tornamos o back-end ciente do tenant em cada requisição, atualizamos o JWT e garantimos o isolamento de dados.</p>
-                        <h5 class="font-semibold mb-2 text-sm">Middleware de Identificação do Tenant</h5>
-                        <div class="code-block">const tenantId = req.headers['x-tenant-id'];
-if (!tenantId) throw new UnauthorizedException();
-const tenant = await this.tenantService.findById(tenantId);
-req['tenant'] = tenant;
-next();</div>
-                        <h5 class="font-semibold mt-4 mb-2 text-sm">Atualização do Payload do JWT</h5>
-                        <div class="code-block">// auth.service.ts
-const payload = { sub: user.id, aud: user.tenantId };
-return this.jwtService.sign(payload);</div>
-                        <h5 class="font-semibold mt-4 mb-2 text-sm">Isolamento de Dados nos Serviços</h5>
-                        <div class="code-block">// products.service.ts
+                        <p class="mb-4">Os microserviçosremovem seus próprios guards de autenticação e confiam no header \`x-tenant-id\` enviado pelo Gateway.</p>
+                        <h5 class="font-semibold mb-2 text-sm">Remover AuthGuard dos Microserviços</h5>
+                        <div class="code-block">// products-service/src/products.controller.ts
+// @UseGuards(JwtAuthGuard) -> REMOVER ESTA LINHA
+@Controller('products')
+export class ProductsController { ... }</div>
+                        <h5 class="font-semibold mt-4 mb-2 text-sm">Consumir o Header do Tenant</h5>
+                        <div class="code-block">// products-service/src/products.service.ts
 async findAll(tenantId: string): Promise<Product[]> {
+  // O tenantId agora vem do controller, que o extrai do header
   return this.productsRepository.find({ where: { tenantId } });
+}
+
+// products-service/src/products.controller.ts
+@Get()
+findAll(@Headers('x-tenant-id') tenantId: string) {
+  return this.productsService.findAll(tenantId);
 }</div>`
                 },
                 {
-                    title: '3. Alterações no Front-end (React)',
+                    title: '4. Alterações no Front-end (React)',
                     content: `
-                        <p class="mb-4">O front-end passa a gerenciar o tenant ativo e a enviá-lo em cada requisição para a API.</p>
-                        <h5 class="font-semibold mb-2 text-sm">Gerenciamento de Estado do Tenant</h5>
-                        <div class="code-block">// AuthContext.js
-const login = (data) => {
-  const decoded = jwt_decode(data.token);
-  setUser({ id: decoded.sub });
-  setTenantId(decoded.aud); // Armazena o tenantId
-  localStorage.setItem('tenantId', decoded.aud);
-};</div>
-                        <h5 class="font-semibold mt-4 mb-2 text-sm">Injetar Header com Axios Interceptor</h5>
-                        <div class="code-block">// api.js
-api.interceptors.request.use(config => {
-  const tenantId = localStorage.getItem('tenantId');
-  if (tenantId) {
-    config.headers['X-Tenant-ID'] = tenantId;
-  }
-  return config;
-});</div>`
+                        <p class="mb-4">A principal mudança no front-end é apontar todas as requisições para o endereço do API Gateway. O envio do JWT permanece o mesmo.</p>
+                        <h5 class="font-semibold mb-2 text-sm">Configuração da API</h5>
+                        <div class="code-block">// api.js (Axios instance)
+const api = axios.create({
+  baseURL: 'https://api.gateway.meudominio.com/', // Apontar para o Gateway
+});
+
+// O interceptor que adiciona o 'Authorization: Bearer ...' continua igual.
+// O interceptor que enviava 'X-Tenant-ID' pode ser REMOVIDO.
+</div>`
                 }
             ];
 
@@ -518,7 +503,7 @@ api.interceptors.request.use(config => {
                 button.addEventListener('click', () => {
                     const content = button.nextElementSibling;
                     const icon = button.querySelector('svg');
-
+                    
                     if (content.style.maxHeight) {
                         content.style.maxHeight = null;
                         icon.parentElement.classList.remove('rotate-180');
@@ -531,5 +516,4 @@ api.interceptors.request.use(config => {
         });
     </script>
 </body>
-
 </html>
